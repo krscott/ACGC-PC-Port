@@ -21,3 +21,8 @@ windows:
 run *args: linux
     test -e build/linux/bin/rom || test -L build/linux/bin/rom || ln -s ../../../rom build/linux/bin/rom
     cd build/linux/bin && ./AnimalCrossing "$@"
+
+# Run on a private display with software graphics (requires framewisp on PATH).
+[positional-arguments]
+headless *args:
+    framewisp acgc run --x11 -- env SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 LIBGL_ALWAYS_SOFTWARE=1 SDL_VIDEO_X11_FORCE_EGL=1 __EGL_VENDOR_LIBRARY_FILENAMES="$ACGC_EGL_VENDOR_FILE" just run "$@"

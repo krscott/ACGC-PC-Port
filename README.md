@@ -58,6 +58,19 @@ On NixOS, enable `hardware.graphics.enable32Bit = true;` for hardware accelerati
 with the Linux build. The shell also supplies Mesa for software rendering.
 A graphical session with OpenGL 3.3 is required to play.
 
+For a private headless display, install [Framewisp](https://github.com/krscott/framewisp)
+on your PATH, then run these commands inside the Linux Nix shell:
+
+```sh
+just headless --verbose
+# In another terminal in the same worktree:
+framewisp acgc screenshot /tmp/animal-crossing.png
+framewisp acgc stop
+```
+
+This uses Mesa software rendering through EGL and dummy audio. Framewisp stays
+in the foreground until you stop the session.
+
 ### MSYS2 Packages
 
 Open **MSYS2 MINGW32** from your Start menu and install:

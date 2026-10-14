@@ -165,12 +165,23 @@ s32 DVDReadPrio(void* fileInfo, void* buf, s32 length, s32 offset, s32 prio) {
     FILE* fp = *dvd_fi_fp(fileInfo);
     (void)prio;
 
+    if (length < 0 || offset < 0) return -1;
+
     if (fp == DISC_SENTINEL) {
-        /* disc image read */
+        /* DVD reads round up to 32 bytes. A trimmed image may omit the
+         * padding after its final file, so read only the file's payload. */
         u32 base = *dvd_fi_startAddr(fileInfo);
-        if (pc_disc_read(base + (u32)offset, buf, (u32)length))
-            return length;
-        return -1;
+        u32 size = *dvd_fi_length(fileInfo);
+        u32 read_size = (u32)length;
+        if ((u32)offset > size) return -1;
+        if (read_size > size - (u32)offset)
+            read_size = size - (u32)offset;
+        if ((u32)length - read_size > 31) return -1;
+        if (read_size && !pc_disc_read(base + (u32)offset, buf, read_size))
+            return -1;
+        if (read_size < (u32)length)
+            memset((u8*)buf + read_size, 0, (u32)length - read_size);
+        return length;
     }
 
     if (!fp) {

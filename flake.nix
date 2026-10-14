@@ -25,13 +25,14 @@
           nativeBuildInputs = tools;
           buildInputs = [ windows.SDL2 ];
           ACGC_TARGET = "windows";
-          SDL2_DLL_PATH = "${windows.SDL2}/bin/SDL2.dll";
+          # sdl2-compat puts its DLL in the dev output alongside sdl2-config.
+          SDL2_DLL_PATH = "${windows.SDL2.dev}/bin/SDL2.dll";
           WINDOWS_DLL_DIR = pkgs.symlinkJoin {
             name = "animal-crossing-windows-runtime";
             paths = [
-              windows.SDL2
-              (windows.sdl3.override { traySupport = false; })
-              windows.windows.mcfgthreads
+              windows.SDL2.dev
+              (pkgs.lib.getBin (windows.sdl3.override { traySupport = false; }))
+              (pkgs.lib.getBin windows.windows.mcfgthreads)
             ];
           };
         };

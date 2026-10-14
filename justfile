@@ -9,7 +9,7 @@ linux:
     cmake --fresh -S pc -B build/linux -G Ninja -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX"
     cmake --build build/linux --parallel "${NIX_BUILD_CORES:-4}"
 
-# Cross-compile the 32-bit Windows executable and copy SDL2.dll beside it.
+# Cross-compile the 32-bit Windows executable and copy its runtime DLLs.
 windows:
     @test "${ACGC_TARGET:-}" = windows || { echo 'Run this recipe with: nix develop .#windows -c just windows' >&2; exit 1; }
     cmake --fresh -S pc -B build/windows -G Ninja -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=i686 -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_RC_COMPILER="$RC" -DSDL2_DLL_PATH="$SDL2_DLL_PATH"
@@ -17,5 +17,6 @@ windows:
     cp -L "$WINDOWS_DLL_DIR"/bin/*.dll build/windows/bin/
 
 # Run from the repository root to use rom/, save/, and settings beside the source.
+[positional-arguments]
 run *args: linux
-    ./build/linux/bin/AnimalCrossing {{args}}
+    ./build/linux/bin/AnimalCrossing "$@"

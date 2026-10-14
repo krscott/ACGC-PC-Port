@@ -1,0 +1,10 @@
+[pre-start]
+# Submodule setup is already handled by the global Worktrunk config.
+# submodules = "git submodule update --recursive --init"
+
+copy-iso = '''
+source={{ primary_worktree_path }}/rom/'Animal Crossing.iso'
+if [ -f "$source" ] && [ ! -e 'rom/Animal Crossing.iso' ] && [ ! -L 'rom/Animal Crossing.iso' ]; then
+    mkdir -p rom && cp --no-clobber --no-target-directory -- "$source" 'rom/Animal Crossing.iso'
+fi
+'''

@@ -42,6 +42,11 @@ add_compile_definitions(
     KEYBOARD_TYPING   # Physical keyboard typing in text editor. Remove for platforms without keyboards.
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # dladdr and Dl_info in pc_main.c require the GNU extensions in dlfcn.h.
+    set_source_files_properties(src/pc_main.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
+endif()
+
 # Common compiler flags (applied to all sources). GCC is required:
 # the decomp depends on -fno-strict-aliasing/-fwrapv semantics and the
 # PC layer uses GCC builtins.
@@ -471,12 +476,15 @@ if(MINGW)
         find_file(WINPTHREAD_LIB libwinpthread.a)
     endif()
     set(WINPTHREAD_STRIPPED "${CMAKE_CURRENT_BINARY_DIR}/libwinpthread_stripped.a")
-    if(WINPTHREAD_LIB AND NOT EXISTS "${WINPTHREAD_STRIPPED}")
-        file(COPY_FILE ${WINPTHREAD_LIB} ${WINPTHREAD_STRIPPED})
-        execute_process(COMMAND ${CMAKE_AR} d "${WINPTHREAD_STRIPPED}" version.o)
-        message(STATUS "Stripped version.o from winpthread: ${WINPTHREAD_STRIPPED}")
+    if(WINPTHREAD_LIB)
+        if(NOT EXISTS "${WINPTHREAD_STRIPPED}")
+            file(COPY_FILE ${WINPTHREAD_LIB} ${WINPTHREAD_STRIPPED})
+            execute_process(COMMAND ${CMAKE_AR} d "${WINPTHREAD_STRIPPED}" version.o)
+            message(STATUS "Stripped version.o from winpthread: ${WINPTHREAD_STRIPPED}")
+        endif()
+        target_link_options(ac_pc PRIVATE -Wl,-Bstatic,--whole-archive "${WINPTHREAD_STRIPPED}" -Wl,-Bdynamic,--no-whole-archive)
     endif()
-    target_link_options(ac_pc PRIVATE -static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive "${WINPTHREAD_STRIPPED}" -Wl,-Bdynamic,--no-whole-archive)
+    target_link_options(ac_pc PRIVATE -static-libgcc -static-libstdc++)
 endif()
 
 # Hide console window on Windows (GUI subsystem)

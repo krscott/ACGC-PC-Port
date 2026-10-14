@@ -25,6 +25,8 @@ f32 fsqrt(f32);
 f32 facos(f32);
 #else
 /* PC stubs - these will be implemented in pc_mtx.c */
+/* glibc also declares fsqrt, with a different argument type. */
+#define fsqrt pc_fsqrt
 s16 sins(u16);
 s16 coss(u16);
 f32 fatan2(f32, f32);

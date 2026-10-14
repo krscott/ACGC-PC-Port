@@ -27,6 +27,37 @@ Only needed if you want to modify the code. Otherwise, use the [pre-built releas
 - **MSYS2** (https://www.msys2.org/)
 - **Animal Crossing (USA) disc image** (ISO, GCM, or CISO format)
 
+### Linux and Windows cross-compilation with Nix
+
+On x86_64 Linux, install Nix with flakes enabled, then build and run:
+
+```sh
+nix develop
+just linux
+just run --verbose
+```
+
+Place your USA Rev 0 disc image in the repository's `rom/` directory. `just run`
+uses the repository root as its working directory, including for `save/`,
+`settings.ini`, and `keybindings.ini`. The Linux executable is
+`build/linux/bin/AnimalCrossing`.
+
+To cross-compile Windows from Linux, use the separate MinGW shell:
+
+```sh
+nix develop .#windows -c just windows
+```
+
+The Windows executable, runtime DLLs (including SDL2 and SDL3), and shaders are
+in `build/windows/bin/`.
+Copy that directory to Windows and put your disc image in its `rom/` subdirectory.
+Both shells use 32-bit compilers and libraries, as required by the game's pointer
+representation. Build outputs stay in separate directories.
+
+On NixOS, enable `hardware.graphics.enable32Bit = true;` for hardware acceleration
+with the Linux build. The shell also supplies Mesa for software rendering.
+A graphical session with OpenGL 3.3 is required to play.
+
 ### MSYS2 Packages
 
 Open **MSYS2 MINGW32** from your Start menu and install:

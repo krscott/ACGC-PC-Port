@@ -42,6 +42,11 @@ add_compile_definitions(
     KEYBOARD_TYPING   # Physical keyboard typing in text editor. Remove for platforms without keyboards.
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # dladdr and Dl_info in pc_main.c require the GNU extensions in dlfcn.h.
+    set_source_files_properties(src/pc_main.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
+endif()
+
 # Common compiler flags (applied to all sources). GCC is required:
 # the decomp depends on -fno-strict-aliasing/-fwrapv semantics and the
 # PC layer uses GCC builtins.
@@ -360,7 +365,7 @@ list(FILTER GAME_C_SOURCES EXCLUDE REGEX ".*/emu64_utility\\.c$")
 # Only files that truly need C++ (std::, extern "C", etc.) - NOT just for nullptr
 set_source_files_properties(
     "${DECOMP_ROOT}/src/static/libforest/emu64/emu64.c"
-    # ja_calc.c uses std::sinf, std::sqrtf
+    # ja_calc.c has an unnamed parameter in a function definition (valid C++).
     "${DECOMP_ROOT}/src/static/jaudio_NES/internal/ja_calc.c"
     # sample.c: reinterpret_cast replaced with C cast under TARGET_PC, no longer needs C++
     # jammain_2.c uses extern "C"
@@ -429,6 +434,13 @@ if(WIN32)
 else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(ac_pc OpenGL::GL dl pthread m)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        # JSystem replaces operator new/delete. Shared libraries must use their
+        # own allocators, including during startup before the game heap exists.
+        set(PC_SYMBOLS_MAP "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linux-symbols.map")
+        target_link_options(ac_pc PRIVATE "LINKER:--version-script=${PC_SYMBOLS_MAP}")
+        set_property(TARGET ac_pc APPEND PROPERTY LINK_DEPENDS "${PC_SYMBOLS_MAP}")
+    endif()
 endif()
 
 set_target_properties(ac_pc PROPERTIES
@@ -471,12 +483,15 @@ if(MINGW)
         find_file(WINPTHREAD_LIB libwinpthread.a)
     endif()
     set(WINPTHREAD_STRIPPED "${CMAKE_CURRENT_BINARY_DIR}/libwinpthread_stripped.a")
-    if(WINPTHREAD_LIB AND NOT EXISTS "${WINPTHREAD_STRIPPED}")
-        file(COPY_FILE ${WINPTHREAD_LIB} ${WINPTHREAD_STRIPPED})
-        execute_process(COMMAND ${CMAKE_AR} d "${WINPTHREAD_STRIPPED}" version.o)
-        message(STATUS "Stripped version.o from winpthread: ${WINPTHREAD_STRIPPED}")
+    if(WINPTHREAD_LIB)
+        if(NOT EXISTS "${WINPTHREAD_STRIPPED}")
+            file(COPY_FILE ${WINPTHREAD_LIB} ${WINPTHREAD_STRIPPED})
+            execute_process(COMMAND ${CMAKE_AR} d "${WINPTHREAD_STRIPPED}" version.o)
+            message(STATUS "Stripped version.o from winpthread: ${WINPTHREAD_STRIPPED}")
+        endif()
+        target_link_options(ac_pc PRIVATE -Wl,-Bstatic,--whole-archive "${WINPTHREAD_STRIPPED}" -Wl,-Bdynamic,--no-whole-archive)
     endif()
-    target_link_options(ac_pc PRIVATE -static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive "${WINPTHREAD_STRIPPED}" -Wl,-Bdynamic,--no-whole-archive)
+    target_link_options(ac_pc PRIVATE -static-libgcc -static-libstdc++)
 endif()
 
 # Hide console window on Windows (GUI subsystem)

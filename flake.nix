@@ -23,7 +23,7 @@
           buildInputs = [ linux.SDL2 linux.libGL ];
           ACGC_TARGET = "linux";
           # SDL loads the OpenGL driver at runtime. NixOS exposes 32-bit drivers here.
-          LD_LIBRARY_PATH = "/run/opengl-driver-32/lib:${pkgs.lib.makeLibraryPath [ linux.mesa ]}";
+          LD_LIBRARY_PATH = "/run/opengl-driver-32/lib:${pkgs.lib.makeLibraryPath [ linux.libGL linux.mesa ]}";
         };
 
         windows = windows.mkShell {

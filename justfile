@@ -14,9 +14,10 @@ windows:
     @test "${ACGC_TARGET:-}" = windows || { echo 'Run this recipe with: nix develop .#windows -c just windows' >&2; exit 1; }
     cmake -S pc -B build/windows -G Ninja -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=i686 -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_RC_COMPILER="$RC" -DSDL2_DLL_PATH="$SDL2_DLL_PATH"
     cmake --build build/windows --parallel "${NIX_BUILD_CORES:-4}"
-    cp -L "$WINDOWS_DLL_DIR"/bin/*.dll build/windows/bin/
+    install -m755 "$WINDOWS_DLL_DIR"/bin/*.dll build/windows/bin/
 
-# Run from the repository root to use rom/, save/, and settings beside the source.
+# Run beside the shaders, using the repository's rom/ directory.
 [positional-arguments]
 run *args: linux
-    ./build/linux/bin/AnimalCrossing "$@"
+    test -e build/linux/bin/rom || test -L build/linux/bin/rom || ln -s ../../../rom build/linux/bin/rom
+    cd build/linux/bin && ./AnimalCrossing "$@"

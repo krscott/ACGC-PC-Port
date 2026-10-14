@@ -113,7 +113,14 @@ void JFWSystem::firstInit() {
     OSInit();
     DVDInit();
     rootHeap = JKRExpHeap::createRoot(CSetUpParam::maxStdHeaps, false);
-    systemHeap = JKRExpHeap::create(CSetUpParam::sysHeapSize, rootHeap, false);
+    u32 systemHeapSize = CSetUpParam::sysHeapSize;
+#ifdef TARGET_PC
+    // Host arena alignment can leave less space than the GameCube estimate.
+    u32 availableSize = rootHeap->do_getFreeSize();
+    if (systemHeapSize > availableSize)
+        systemHeapSize = availableSize;
+#endif
+    systemHeap = JKRExpHeap::create(systemHeapSize, rootHeap, false);
 }
 
 void JFWSystem::init() {

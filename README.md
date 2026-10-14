@@ -38,9 +38,9 @@ just run --verbose
 ```
 
 Place your USA Rev 0 disc image in the repository's `rom/` directory. `just run`
-uses the repository root as its working directory, including for `save/`,
-`settings.ini`, and `keybindings.ini`. The Linux executable is
-`build/linux/bin/AnimalCrossing`.
+links that directory into `build/linux/bin/rom` and runs beside the shaders.
+Save data, `settings.ini`, and `keybindings.ini` stay in `build/linux/bin/`.
+The Linux executable is `build/linux/bin/AnimalCrossing`.
 
 To cross-compile Windows from Linux, use the separate MinGW shell:
 

@@ -434,6 +434,13 @@ if(WIN32)
 else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(ac_pc OpenGL::GL dl pthread m)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        # JSystem replaces operator new/delete. Shared libraries must use their
+        # own allocators, including during startup before the game heap exists.
+        set(PC_SYMBOLS_MAP "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linux-symbols.map")
+        target_link_options(ac_pc PRIVATE "LINKER:--version-script=${PC_SYMBOLS_MAP}")
+        set_property(TARGET ac_pc APPEND PROPERTY LINK_DEPENDS "${PC_SYMBOLS_MAP}")
+    endif()
 endif()
 
 set_target_properties(ac_pc PROPERTIES
